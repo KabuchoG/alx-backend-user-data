@@ -2,14 +2,18 @@
 """log message obfuscated"""
 
 
+import mysql.connector
+import logging
+import bcrypt
+from os import getenv
+
+
 def filter_datum(fields: list, redaction: str,
                  message: str, separator: str) -> str:
     """returns the log message obfuscated"""
     for field in fields:
         message = message.replace(field + separator, redaction + separator)
     return message
-
-import logging
 
 
 class RedactingFormatter(logging.Formatter):
@@ -29,7 +33,9 @@ class RedactingFormatter(logging.Formatter):
                             super(RedactingFormatter, self).format(record),
                             self.SEPARATOR)
 
+
 PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'password')
+
 
 def get_logger() -> logging.Logger:
     """returns a logging.Logger object"""
@@ -41,9 +47,6 @@ def get_logger() -> logging.Logger:
     logger.addHandler(handler)
     return logger
 
-import mysql.connector
-from os import getenv
-
 
 def get_db() -> mysql.connector.connection.MySQLConnection:
     """returns a connector to the database"""
@@ -53,6 +56,7 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
     db_name = getenv("PERSONAL_DATA_DB_NAME")
     return mysql.connector.connect(user=username, password=password,
                                    host=host, database=db_name)
+
 
 def main():
     """reads and filters data"""
@@ -68,15 +72,15 @@ ip={}; last_login={}; user_agent={}; ".format(
     cursor.close()
     db.close()
 
+
 if __name__ == "__main__":
     main()
-
-import bcrypt
 
 
 def hash_password(password: str) -> bytes:
     """returns a salted, hashed password, which is a byte string"""
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+
 
 def is_valid(hashed_password: bytes, password: str) -> bool:
     """returns a boolean"""
